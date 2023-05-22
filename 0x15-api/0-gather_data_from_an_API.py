@@ -1,64 +1,38 @@
 #!/usr/bin/python3
-# script to gather data from an API
+"""get data from jsonplaceholder"""
 import requests
 import sys
 
-
-def get_username(base_url, user_id):
-    """Gets username
-       Args:
-           base_url (str): base url for API
-           user_id (str): user id number
-       Returns: username
-    """
-    response = requests.get(
-        "{}users/{}".format(base_url, user_id))
-    usr_dict = response.json()
-    return usr_dict['name']
-
-
-def get_todo_list(base_url, user_id):
-    """Gets todo list
-       Args:
-           base_url (str): base url for API
-           user_id (str): user id number
-       Returns: list of todo items (dicts)
-    """
-    response = requests.get(
-        "{}users/{}/todos".format(base_url, user_id))
-    return response.json()
-
-
-def get_completed(todo_list):
-    """Gets completed items
-       Args:
-           todo_list (list): list of todo items
-       Returns: string of todo items to print
-    """
-
-    done_str = ""
-    done_list = []
-    count = 0
-    for todo in todo_list:
-        if todo['completed'] is True:
-            count += 1
-            done_list.append("\t {}".format(todo['title']))
-    done_str = "\n".join(done_list)
-
-    return count, done_str
-
-
 if __name__ == '__main__':
-    user_id = sys.argv[1]
-    base_url = 'https://jsonplaceholder.typicode.com/'
+    """REST API manipulations"""
+    if len(sys.argv) > 1 and isinstance(eval(sys.argv[1]), int):
+        pass
+    else:
+        sys.exit(0)
 
-    uname = get_username(base_url, user_id)
-    todo_list = get_todo_list(base_url, user_id)
-    total = len(todo_list)
+    BASE_API = "https://jsonplaceholder.typicode.com/"
+    employee_id = sys.argv[1]
+    user_response_url = BASE_API + "users/{}".format(employee_id)
+    todo_response_url = BASE_API + "users/{}/todos".format(employee_id)
 
-    count, done_str = get_completed(todo_list)
+    user_response = requests.get(user_response_url).json()
+    todo_response = requests.get(todo_response_url).json()
 
-    print(
-        "Employee {} is done with tasks({}/{}):".format(uname, count, total))
-    if count > 0:
-        print(done_str)
+    employee_name = user_response.get('name')
+
+    num_tasks_done = 0
+    for todo in todo_response:
+        if todo.get("completed"):
+            num_tasks_done += 1
+
+    total_num_tasks = 0
+    for todo in todo_response:
+        total_num_tasks += 1
+
+    print("Employee {} is done with tasks({}/{}):".format(employee_name,
+          num_tasks_done, total_num_tasks))
+
+    for todo in todo_response:
+        task_title = todo.get("title")
+        if (todo.get("completed")):
+            print("\t {}".format(task_title))
