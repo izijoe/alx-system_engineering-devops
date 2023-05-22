@@ -1,50 +1,46 @@
 #!/usr/bin/python3
-# script to gather todo data from an API and write to JSON file
-import json
+"""get data from jsonplaceholder"""
 import requests
 import sys
 
-
-def get_username(base_url, user_id):
-    """Gets username
-       Args:
-           base_url (str): base url for API
-           user_id (str): user id number
-       Returns: username
-    """
-    response = requests.get(
-        "{}users/{}".format(base_url, user_id))
-    usr_dict = response.json()
-    return usr_dict['username']
-
-
-def get_todo_list(base_url, user_id):
-    """Gets todo list
-       Args:
-           base_url (str): base url for API
-           user_id (str): user id number
-       Returns: list of todo items (dicts)
-    """
-    response = requests.get(
-        "{}users/{}/todos".format(base_url, user_id))
-    return response.json()
-
-
 if __name__ == '__main__':
-    user_id = sys.argv[1]
-    base_url = 'https://jsonplaceholder.typicode.com/'
+    """REST API manipulations"""
+    if len(sys.argv) > 1 and isinstance(eval(sys.argv[1]), int):
+        pass
+    else:
+        sys.exit(0)
 
-    uname = get_username(base_url, user_id)
-    todo_list = get_todo_list(base_url, user_id)
+    BASE_API = "https://jsonplaceholder.typicode.com/"
+    employee_id = sys.argv[1]
+    user_response_url = BASE_API + "users/{}".format(employee_id)
+    todo_response_url = BASE_API + "users/{}/todos".format(employee_id)
 
-    with open('{}.json'.format(user_id), 'w') as f:
-        todo_dict = {}
-        todo_dict[sys.argv[1]] = []
-        for todo in todo_list:
-            task = {}
-            task['task'] = todo['title']
-            task['completed'] = todo['completed']
-            task['username'] = uname
-            todo_dict[sys.argv[1]].append(task)
+    user_response = requests.get(user_response_url).json()
+    todo_response = requests.get(todo_response_url).json()
 
-        f.write(json.dumps(todo_dict))
+    employee_name = user_response.get('name')
+    username = user_response.get('username')
+
+    with open("{}.json".format(employee_id), 'w') as f:
+        f.write('{')
+        f.write('"{}"'.format(employee_id))
+        f.write(':[')
+        for i, todo in enumerate(todo_response):
+            task_status = todo.get("completed")
+            task_title = todo.get("title")
+            if i == len(todo_response) - 1:
+                f.write(
+                    '{{"task": "{}", "completed": {}, "username": "{}"}}'.
+                    format(
+                        task_title,
+                        'true' if task_status else 'false',
+                        username))
+            else:
+                f.write(
+                    '{{"task": "{}", "completed": {}, "username": "{}"}}, '.
+                    format(
+                        task_title,
+                        'true' if task_status else 'false',
+                        username))
+
+        f.write(']}')

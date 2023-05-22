@@ -1,43 +1,30 @@
 #!/usr/bin/python3
-# script to gather todo data from an API and write to CSV file
-import csv
+"""get data from jsonplaceholder"""
 import requests
 import sys
 
-
-def get_username(base_url, user_id):
-    """Gets username
-       Args:
-           base_url (str): base url for API
-           user_id (str): user id number
-       Returns: username
-    """
-    response = requests.get(
-        "{}users/{}".format(base_url, user_id))
-    usr_dict = response.json()
-    return usr_dict['username']
-
-
-def get_todo_list(base_url, user_id):
-    """Gets todo list
-       Args:
-           base_url (str): base url for API
-           user_id (str): user id number
-       Returns: list of todo items (dicts)
-    """
-    response = requests.get(
-        "{}users/{}/todos".format(base_url, user_id))
-    return response.json()
-
-
 if __name__ == '__main__':
-    user_id = sys.argv[1]
-    base_url = 'https://jsonplaceholder.typicode.com/'
+    """REST API manipulations"""
+    if len(sys.argv) > 1 and isinstance(eval(sys.argv[1]), int):
+        pass
+    else:
+        sys.exit(0)
 
-    uname = get_username(base_url, user_id)
-    todo_list = get_todo_list(base_url, user_id)
+    BASE_API = "https://jsonplaceholder.typicode.com/"
+    employee_id = sys.argv[1]
+    user_response_url = BASE_API + "users/{}".format(employee_id)
+    todo_response_url = BASE_API + "users/{}/todos".format(employee_id)
 
-    with open('{}.csv'.format(user_id), 'w') as csvfile:
-        writer = csv.writer(csvfile, quoting=csv.QUOTE_ALL)
-        for todo in todo_list:
-            writer.writerow([user_id, uname, todo['completed'], todo['title']])
+    user_response = requests.get(user_response_url).json()
+    todo_response = requests.get(todo_response_url).json()
+
+    employee_name = user_response.get('name')
+    username = user_response.get('username')
+
+    with open("{}.csv".format(employee_id), 'w') as f:
+        for todo in todo_response:
+            task_status = todo.get("completed")
+            task_title = todo.get("title")
+            to_write = '"{}","{}","{}","{}"\n'.format(
+                employee_id, username, task_status, task_title)
+            f.write(to_write)
