@@ -1,38 +1,25 @@
 #!/usr/bin/python3
-"""get data from jsonplaceholder"""
+"""Script that uses REST API"""
 import requests
 import sys
 
-if __name__ == '__main__':
-    """REST API manipulations"""
-    if len(sys.argv) > 1 and isinstance(eval(sys.argv[1]), int):
-        pass
-    else:
-        sys.exit(0)
+if __name__ == "__main__":
+    if len(sys.argv) == 2 and sys.argv[1].isdigit():
+        args = {"id": sys.argv[1]}
+        users = requests.get("https://jsonplaceholder.typicode.com/users",
+                             params=args).json()
+        args = {"userId": sys.argv[1]}
+        todos = requests.get("https://jsonplaceholder.typicode.com/todos",
+                             params=args).json()
+        todos_len = 0
+        todos_arr = []
+        for i in todos:
+            if i.get("completed"):
+                todos_arr.append(i)
+                todos_len += 1
 
-    BASE_API = "https://jsonplaceholder.typicode.com/"
-    employee_id = sys.argv[1]
-    user_response_url = BASE_API + "users/{}".format(employee_id)
-    todo_response_url = BASE_API + "users/{}/todos".format(employee_id)
+        print("Employee {} is done with tasks({}/{}):".format(
+              users[0].get("name"), todos_len, len(todos)))
 
-    user_response = requests.get(user_response_url).json()
-    todo_response = requests.get(todo_response_url).json()
-
-    employee_name = user_response.get('name')
-
-    num_tasks_done = 0
-    for todo in todo_response:
-        if todo.get("completed"):
-            num_tasks_done += 1
-
-    total_num_tasks = 0
-    for todo in todo_response:
-        total_num_tasks += 1
-
-    print("Employee {} is done with tasks({}/{}):".format(employee_name,
-          num_tasks_done, total_num_tasks))
-
-    for todo in todo_response:
-        task_title = todo.get("title")
-        if (todo.get("completed")):
-            print("\t {}".format(task_title))
+        for i in todos_arr:
+            print("\t {}".format(i.get("title")))
